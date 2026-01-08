@@ -1,0 +1,26 @@
+[
+  {
+    "host_name": "james",
+    "password": "2007",
+    "active": false,
+    "players_connected": 2
+  },
+  {
+    "host_name": "jason",
+    "password": "1",
+    "active": false,
+    "players_connected": 1
+  },
+  {
+    "host_name": "ee",
+    "password": "e",
+    "active": false,
+    "players_connected": 2
+  },
+  {
+    "host_name": "k",
+    "password": "k",
+    "active": false,
+    "players_connected": 2
+  }
+]
