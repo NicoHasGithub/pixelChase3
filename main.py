@@ -35,42 +35,7 @@ except Exception as error:
     print("Could not start multiplayer" + str(error))
     multiplayer = False
 
-#json file management
-def load_log():
-    with open("game_log.json", "r") as f:
-        return json.load(f)
 
-def save_games(data):
-    with open("game_log.json", "w") as f:
-        return json.dump(data, f, indent=2)
-
-def add_log(hname, pword):
-    data = load_log()
-    for game in data:
-        if game["host_name"].lower() == hname.lower() and game["password"] == pword:
-            return False  # Duplicate game
-    new_game = {
-        "host_name": hname,
-        "password": pword,
-        "active": True,
-        "players_connected": 1
-    }
-    data.append(new_game)
-    save_games(data)
-    return True
-
-def join_game_log(hname, pword):
-    data = load_log()
-    for game in data:
-        if game["host_name"].lower() == hname.lower() and game["password"] == pword and game["active"]:
-            game["players_connected"] += 1
-            if game["players_connected"] >= 2:
-                game["active"] = False  # Game ready
-            save_games(data)
-            return True
-    return False
-
-#end of json mgment
 
 #deafult game call
 game_state = {
@@ -256,16 +221,14 @@ def lobby(name, pword):
         screen.blit(bg_img, (0, 0))
         draw_text('Lobby', retroFont, (255, 255, 255), screen, 250, 20)
 
-        #get json file & connect it to current game
-        data = load_log()
-
         #loop through the json file to look for the number of players connected to this game
-        for i in data:
-            if i["host_name"] == name.lower() and i["password"] ==pword:
-                players = i.get("players_connected", 1)
-                players_connected = players
-                game_active = i.get("active", True)
-                break
+        reply = network.send(f"{player_id}:-1,-1")
+        players_connected = 1
+
+        if reply and "|" in reply:
+            parts = reply.split("|")
+            if len(parts) >= 3:
+                player_id = int(parts[2])
 
         draw_text(f"Players waiting: {players_connected}/2", retroSmall, (255, 255, 255), screen, 250, 200)
 
@@ -398,8 +361,9 @@ def create_game():
                     return
                 if event.key == K_RETURN:
                     if len(user_name) > 0 and len(user_pword) > 0:
-                        success = add_log(user_name, user_pword)
-                        if success:
+
+                        response = network.send(f"CREATE:{user_name}:{user_pword}")
+                        if response == "OK":
                             messagebox.showinfo(title='Pixel Chase', message='Game Created Successfully!')
                             # create instance of game dictionary
                             lobby_state["username"] = user_name
@@ -500,15 +464,18 @@ def join_game():
                     return
                 if event.key == K_RETURN:
                     if len(user_name) > 0 and len(user_pword) > 0:
-                        success = join_game_log(user_name, user_pword)
-                        if success:
-                            messagebox.showinfo(title='Pixel Chase', message='Game Joined Successfully!')
-                            #create instance of game dictionary
-                            lobby_state["username"] = user_name
-                            lobby_state["password"] = user_pword
+                        raw_data = network.send("GET_ROOMS")
 
-                            status = 7
-                            return
+                        if raw_data != "EMPTY":
+                            s_name, s_pword = raw_data.split(":")
+                            if user_name.lower() == s_name and user_pword == s_pword:
+                                network.send(f"JOIN:{user_name}")
+                                # create instance of game dictionary
+                                lobby_state["username"] = user_name
+                                lobby_state["password"] = user_pword
+
+                                status = 7
+                                return
 
                         else:
                             messagebox.showinfo(title='Pixel Chase',

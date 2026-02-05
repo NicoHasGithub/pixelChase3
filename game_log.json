@@ -22,5 +22,17 @@
     "password": "k",
     "active": false,
     "players_connected": 2
+  },
+  {
+    "host_name": "nikos",
+    "password": "7",
+    "active": true,
+    "players_connected": 1
+  },
+  {
+    "host_name": "nicoo",
+    "password": "1",
+    "active": true,
+    "players_connected": 1
   }
 ]
